@@ -1,0 +1,165 @@
+---
+title: "Sales Data Analysis"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+library(readr)
+Sales <- read_csv("Sales.csv") 
+```
+
+## Get to Know the Dataset
+using the 'head', 'colnames' and 'str' functions
+```{r head}
+head(Sales)
+```
+
+```{r colnames}
+colnames(Sales)
+```
+
+```{r str}
+str(Sales)
+```
+## Data Exploration
+#
+The minimum revenue generated within the six-month period in dollars.
+```{r min_sales}
+min(Sales$Revenue)
+```
+The maximum revenue generated within the six-month period in dollars
+```{r max_ales}
+max(Sales$Revenue)
+```
+The average revenue generated within the six-month period in dollars.
+```{r average_sales}
+mean(Sales$Revenue)
+```
+The total revenue generated within the six-month period in dollars.
+```{r total_sales}
+sum(Sales$Revenue)
+```
+The total number of units sold within the six-month period.
+```{r total_units}
+sum(Sales$Units)
+```
+The total number of manufacturers.
+```{r total_manufacturers}
+sum(Sales$`Manufacturer Count`)
+```
+Total revenue generated during each of the months
+```{r salestrend}
+library(tidyverse)
+                      Sales %>%
+                      group_by(Month) %>%
+                      mutate(Month = factor(Month, levels = month.name)) %>%
+                      arrange(Month) %>%
+                      summarize(Revenue = sum(Revenue))
+```
+```{r salestrend_, include=FALSE}
+SalesTrendPerMonth <- Sales %>%
+                      group_by(Month) %>%
+                      mutate(Month = factor(Month, levels = month.name)) %>%
+                      arrange(Month) %>%
+                      summarize(Revenue = sum(Revenue))
+```
+
+```{r salestrendchart}
+library(ggplot2)
+ggplot(data=SalesTrendPerMonth,aes(x=Month,y=Revenue,group=1))+geom_line(color = "blue")+geom_point(color = "blue")+
+  labs(title= "Sales Trend Per Month", caption = "April is the month with the highest revenue")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+The ten products that brought in the most revenue within the six-month period
+```{r top10products}
+                Sales %>%
+                group_by(`Product Name`) %>%
+                summarize(Revenue = sum(Revenue)) %>%
+                top_n(10)
+```
+
+```{r top10products_, include=FALSE}
+Top10Products <-Sales %>%
+                group_by(`Product Name`) %>%
+                summarize(Revenue = sum(Revenue)) %>%
+                top_n(10)
+```
+
+```{r top10productschart}
+ggplot(data=Top10Products,aes(x=reorder(`Product Name`,-Revenue),y=Revenue,))+geom_bar(stat="identity",fill="blue")+
+  labs(title= "Top 10 products by Revenue",x= "Product Name", caption = "Maximus UM-43 generated the most revenue")+
+  theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+The three states that brought in the most revenue within the six-month period
+```{r top3states}
+              Sales %>%
+              group_by(State) %>%
+              summarize(Revenue = sum(Revenue)) %>%
+              top_n(3)
+```
+
+```{r top3states_, include=FALSE}
+Top3States <- Sales %>%
+              group_by(State) %>%
+              summarize(Revenue = sum(Revenue)) %>%
+              top_n(3)
+```
+
+```{r top3stateschart}
+ggplot(data=Top3States,aes(x=reorder(State,-Revenue),y=Revenue,))+geom_bar(stat="identity",fill="blue")+
+  labs(title= "Top 3 States by Revenue",x= "State", caption = "Onatario generated the most revenue")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Total units sold during each of the months
+```{r trendbyunits}
+                 Sales %>%
+                group_by(Month) %>%
+                mutate(Month = factor(Month, levels = month.name)) %>%
+                arrange(Month) %>%
+                summarize(Units = sum(Units))
+```
+
+```{r trendbyunits_, include=FALSE}
+TrendByUnits <- Sales %>%
+                group_by(Month) %>%
+                mutate(Month = factor(Month, levels = month.name)) %>%
+                arrange(Month) %>%
+                summarize(Units = sum(Units))
+```
+
+```{r trendbyunitschart}
+ggplot(data=TrendByUnits, aes(x=Month, y=Units, group = 1))+ geom_line(color = "blue")+geom_point(color = "blue")+
+  labs(title= "Sales Trend by Number of Units", caption = "April is the month with highest sales by number of units")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Revenue contribution by category
+```{r revenuepercentage}
+               library(formattable)
+
+                       Sales %>%
+                       group_by(Category) %>%
+                       summarize(Revenue = sum(Revenue)) %>%
+                       mutate(RevenuePercentage =percent(Revenue/sum(Revenue)))
+```
+```{r revenuepercentage_, include=FALSE}
+               RevenueContribution <- Sales %>%
+                       group_by(Category) %>%
+                       summarize(Revenue = sum(Revenue)) %>%
+                       mutate(RevenuePercentage =percent(Revenue/sum(Revenue)))
+```
+
+```{r revenuepercentagechart}
+    ggplot(data=RevenueContribution, aes(x = "", y = RevenuePercentage, fill = Category)) +
+  geom_bar(width = 1, stat = "identity", color = "white") +
+  coord_polar("y", start = 0)+
+  geom_text(aes(label = RevenuePercentage), color = "white",angle =90, position = position_stack(vjust = 0.5))+theme_void()+
+  labs(title= "Revenue Contribution by Category", caption = "The urban category brought in the most revenue")
+  
+
+```
